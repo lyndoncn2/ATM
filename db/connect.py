@@ -56,6 +56,17 @@ def modiyUserLoginStatus(status, username):
     SQL2 = 'update account_info set login_status = "{0}" where user_name = "{1}"'.format(status,username)
     cur.execute(SQL2)
 
+def modiyUserLoginLockStatus(status, username):
+    mysql_config = setting.DATABASE
+    cur = mysqlConn(mysql_config)
+    SQL2 = 'update account_info set user_lock = "{0}" where user_name = "{1}"'.format(status,username)
+    cur.execute(SQL2)
+
+def addUsertoAccountInfoTable(username, password):
+    mysql_config = setting.DATABASE
+    cur = mysqlConn(mysql_config)
+    SQL2 = 'insert into account_info (user_lock, user_name, user_password, balance, login_status) values ("True", "{0}", "{1}", 50000, "False"); '.format(username, password)
+    cur.execute(SQL2)
 #根据用户ID与类型，对用户余额进行修改
 def modifyBalanceBaseAccountID(id, type, money):
     mysql_config = setting.DATABASE

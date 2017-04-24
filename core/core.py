@@ -44,8 +44,12 @@ def login(*args, **kwargs):
         else:
             password = user_info[3]
             if password == passwd:
-                connect.modiyUserLoginStatus('True', username)
-                return username
+                if user_info[1]== 'True':
+                    connect.modiyUserLoginStatus('True', username)
+                    return username
+                else:
+                    exit('Hello {0}, you are locked.'.format(username))
+
             else:
                 flag += 1
                 if flag < 3:
@@ -207,7 +211,24 @@ def userexit(username):
     user_id = user_info[0]
     connect.modiyUserLoginStatus('False', username)
 
+def updateUserLockStatus(status, username):
+    user_info = connect.getUserCountInfoBaseUsername(username)
+    if len(user_info) == 0:
+        print('No User....., this user {0} has no way to lock or is locked.'.format(username))
+    else:
+        connect.modiyUserLoginLockStatus(status, username)
+        print('Hello {0}, your lock status is {1}.\n'.format(username, status))
+
+def registeredUser(username, password):
+    connect.addUsertoAccountInfoTable(username, password)
+
+
 def main():
+    MENUS2 = {
+        "1": ["修改用户锁",updateUserLockStatus],
+        "2": ["用户登陆", login],
+        "3": ["注册用户", registeredUser]
+    }
     MENUS = {
         #"1": ["登陆", login],
         "1": ["查看用户信息",  check_user_info],
@@ -219,41 +240,63 @@ def main():
         "7": ["查看帐单信息",checkBillInfoBaseUsername], #username
         "8": ["用户退出登录",userexit]
     }
-    username = login()
     while True:
-        for num, menu in enumerate(sorted(MENUS)):
-            print(num + 1, MENUS[menu][0])
+        for num2, menu2 in enumerate(sorted(MENUS2)):
+            print(num2 + 1, MENUS2[menu2][0])
+        op_evnet2 = input("请选择你要操作的序号：").strip()
+        if op_evnet2 == "1":
+            username = input('请输入用户名: ').strip()
+            userlockedstatus = input('请输入用户状态(True/False): ').strip()
+            updateUserLockStatus(userlockedstatus, username)
+        elif op_evnet2 == "2":
+            username = login()
+            while True:
+                for num, menu in enumerate(sorted(MENUS)):
+                    print(num + 1, MENUS[menu][0])
 
-        op_evnet = input("输入要操作的内容:").strip()
-        if op_evnet in MENUS:
-            if op_evnet in ["1", "6", "7"]:
-                print(username + ":")
-                print(MENUS[op_evnet][1](username))
-            if op_evnet == "2":
-                numberOfMoney = int(input("Please input you want to withdraw: ").strip())
-                result =  withDrawalsOrRepayMent(username,'minus',numberOfMoney)
-                if result == "success":
-                    print("Hi {0}, withdraw success.".format(username))
+                op_evnet = input("输入要操作的内容:").strip()
+                if op_evnet in MENUS:
+                    if op_evnet in ["1", "6", "7"]:
+                        print(username + ":")
+                        print(MENUS[op_evnet][1](username))
+                    if op_evnet == "2":
+                        numberOfMoney = int(input("Please input you want to withdraw: ").strip())
+                        result =  withDrawalsOrRepayMent(username,'minus',numberOfMoney)
+                        if result == "success":
+                            print("Hi {0}, withdraw success.".format(username))
+                        else:
+                            print("Hi {0}, withdraw fail.".format(username))
+                    if op_evnet == "3":
+                        numberOfMoney = int(input("Please input you want to repayment: ").strip())
+                        result =  withDrawalsOrRepayMent(username,'plus',numberOfMoney)
+                        if result == "success":
+                            print("Hi {0}, repayment success.".format(username))
+                        else:
+                            print("Hi {0}, repayment fail.".format(username))
+                    if op_evnet == "4":
+                        accessor = input("Who do you want to transfer to? ").strip()
+                        numberOfMoney = int(input("How much money, you want to transfer: ").strip())
+                        result = transfer(username, accessor, float(numberOfMoney))
+                        print(result)
+                    if op_evnet == "5":
+                        result = buyProducts(username)
+                        buyProductsCompute(username, result)
+                    if op_evnet == "8":
+                        MENUS[op_evnet][1](username)
+                        exit("Bye Bye")
                 else:
-                    print("Hi {0}, withdraw fail.".format(username))
-            if op_evnet == "3":
-                numberOfMoney = int(input("Please input you want to repayment: ").strip())
-                result =  withDrawalsOrRepayMent(username,'plus',numberOfMoney)
-                if result == "success":
-                    print("Hi {0}, repayment success.".format(username))
-                else:
-                    print("Hi {0}, repayment fail.".format(username))
-            if op_evnet == "4":
-                accessor = input("Who do you want to transfer to? ").strip()
-                numberOfMoney = int(input("How much money, you want to transfer: ").strip())
-                result = transfer(username, accessor, float(numberOfMoney))
-                print(result)
-            if op_evnet == "5":
-                result = buyProducts(username)
-                buyProductsCompute(username, result)
-            if op_evnet == "8":
-                MENUS[op_evnet][1](username)
-                exit("Bye Bye")
+                    print("功能未找到")
+        elif op_evnet2 == "3":
+            print('''
+                用户额度默认: 50000元
+                用户登陆状态: False
+                用户锁: True
+                ''')
+            username = input('please input your name: ').strip()
+            password = input('please input your passwd: ').strip()
+            registeredUser(username, password)
+            print('添加用户成功\n')
+
         else:
             print("功能未找到")
 
